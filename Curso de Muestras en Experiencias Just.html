@@ -2019,36 +2019,63 @@ function filterCards() {
 
  // --- Cerrar modal con tecla ESC ---
  function handleEscapeKey(event) {
-   // Verificar que sea la tecla ESC
-   if (event.key !== 'Escape' && event.keyCode !== 27) {
+   // Verificar que sea la tecla ESC (compatibilidad con diferentes navegadores)
+   var isEscape = false;
+   if (event.key) {
+     isEscape = (event.key === 'Escape' || event.key === 'Esc');
+   } else if (event.keyCode) {
+     isEscape = (event.keyCode === 27);
+   } else if (event.which) {
+     isEscape = (event.which === 27);
+   }
+   
+   if (!isEscape) {
      return;
    }
    
    // Solo procesar si no hay inputs activos (para no interferir con escritura)
    var activeElement = document.activeElement;
-   if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+   if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable)) {
      return;
    }
    
    // Buscar el modal visible y cerrarlo
    var modals = document.querySelectorAll('.modal-overlay');
+   var modalFound = false;
+   
    for (var i = 0; i < modals.length; i++) {
      var modal = modals[i];
-     var computedStyle = window.getComputedStyle(modal);
-     if (modal.style.display === 'flex' || computedStyle.display === 'flex') {
+     // Verificar si el modal está visible de múltiples formas
+     var styleDisplay = modal.style.display;
+     var computedDisplay = window.getComputedStyle(modal).display;
+     
+     if (styleDisplay === 'flex' || computedDisplay === 'flex') {
        modal.style.display = 'none';
        enableBodyScroll();
-       event.preventDefault();
-       event.stopPropagation();
-       return; // Cerrar el primero que encontremos
+       modalFound = true;
+       break; // Cerrar el primero que encontremos
      }
+   }
+   
+   if (modalFound) {
+     event.preventDefault();
+     event.stopPropagation();
+     event.stopImmediatePropagation();
    }
  }
 
  function setupEscapeKey() {
-   // Agregar listener en window para capturar todos los eventos de teclado
+   // Remover listeners anteriores si existen (evitar duplicados)
+   window.removeEventListener('keydown', handleEscapeKey, true);
+   document.removeEventListener('keydown', handleEscapeKey, true);
+   
+   // Agregar listener en window y document para máxima cobertura
    window.addEventListener('keydown', handleEscapeKey, true);
    document.addEventListener('keydown', handleEscapeKey, true);
+   
+   // También agregar sin capture por si acaso
+   window.addEventListener('keydown', handleEscapeKey, false);
+   document.addEventListener('keydown', handleEscapeKey, false);
  }
 
  // --- Agregar bot&#243;n de cierre inferior din&#225;micamente ---
@@ -2097,10 +2124,14 @@ function filterCards() {
 
  // Ejecutar cuando el DOM esté listo
  if (document.readyState === 'loading') {
-   document.addEventListener('DOMContentLoaded', initModalHandlers);
+   document.addEventListener('DOMContentLoaded', function() {
+     initModalHandlers();
+     setupEscapeKey(); // Asegurar que esté activo después del DOM
+   });
  } else {
    // DOM ya está listo
    initModalHandlers();
+   setupEscapeKey();
  }
 
  // También ejecutar cuando la ventana esté completamente cargada
@@ -2108,6 +2139,36 @@ function filterCards() {
    setupEscapeKey(); // Asegurar que el listener esté activo
    ensureBottomCloseButtons();
  });
+
+ // Listener adicional directo como respaldo (máxima compatibilidad)
+ (function() {
+   function directEscapeHandler(e) {
+     var key = e.key || e.keyCode || e.which;
+     if (key === 'Escape' || key === 'Esc' || key === 27) {
+       var modals = document.querySelectorAll('.modal-overlay');
+       for (var j = 0; j < modals.length; j++) {
+         var m = modals[j];
+         if (window.getComputedStyle(m).display === 'flex' || m.style.display === 'flex') {
+           m.style.display = 'none';
+           enableBodyScroll();
+           e.preventDefault();
+           e.stopPropagation();
+           return false;
+         }
+       }
+     }
+   }
+   // Agregar múltiples veces para asegurar
+   document.onkeydown = directEscapeHandler;
+   window.onkeydown = directEscapeHandler;
+   if (document.body) {
+     document.body.onkeydown = directEscapeHandler;
+   } else {
+     document.addEventListener('DOMContentLoaded', function() {
+       document.body.onkeydown = directEscapeHandler;
+     });
+   }
+ })();
 
  // --- Navegación suave y resaltado activo del índice en el header ---
  (function() {
