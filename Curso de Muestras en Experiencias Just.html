@@ -2018,47 +2018,37 @@ function filterCards() {
  window.openModal = openModal;
 
  // --- Cerrar modal con tecla ESC ---
+ function handleEscapeKey(event) {
+   // Verificar que sea la tecla ESC
+   if (event.key !== 'Escape' && event.keyCode !== 27) {
+     return;
+   }
+   
+   // Solo procesar si no hay inputs activos (para no interferir con escritura)
+   var activeElement = document.activeElement;
+   if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+     return;
+   }
+   
+   // Buscar el modal visible y cerrarlo
+   var modals = document.querySelectorAll('.modal-overlay');
+   for (var i = 0; i < modals.length; i++) {
+     var modal = modals[i];
+     var computedStyle = window.getComputedStyle(modal);
+     if (modal.style.display === 'flex' || computedStyle.display === 'flex') {
+       modal.style.display = 'none';
+       enableBodyScroll();
+       event.preventDefault();
+       event.stopPropagation();
+       return; // Cerrar el primero que encontremos
+     }
+   }
+ }
+
  function setupEscapeKey() {
-   function handleEscape(event) {
-     // Solo procesar si no hay inputs activos (para no interferir con escritura)
-     if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
-       return;
-     }
-     
-     if (event.key === 'Escape' || event.keyCode === 27) {
-       // Buscar el modal visible y cerrarlo
-       var modals = document.querySelectorAll('.modal-overlay');
-       for (var i = 0; i < modals.length; i++) {
-         var modal = modals[i];
-         var computedStyle = window.getComputedStyle(modal);
-         if (modal.style.display === 'flex' || computedStyle.display === 'flex') {
-           modal.style.display = 'none';
-           enableBodyScroll();
-           event.preventDefault();
-           event.stopPropagation();
-           break; // Solo cerrar el primero que encontremos
-         }
-       }
-     }
-   }
-   
-   // Agregar listener múltiples veces para asegurar que funcione
-   document.addEventListener('keydown', handleEscape, true); // useCapture = true para capturar antes
-   
-   // También cuando el DOM esté listo
-   if (document.readyState === 'loading') {
-     document.addEventListener('DOMContentLoaded', function() {
-       document.addEventListener('keydown', handleEscape, true);
-     });
-   } else {
-     // DOM ya está listo, agregar de nuevo por si acaso
-     document.addEventListener('keydown', handleEscape, true);
-   }
-   
-   // También cuando la ventana esté completamente cargada
-   window.addEventListener('load', function() {
-     document.addEventListener('keydown', handleEscape, true);
-   });
+   // Agregar listener en window para capturar todos los eventos de teclado
+   window.addEventListener('keydown', handleEscapeKey, true);
+   document.addEventListener('keydown', handleEscapeKey, true);
  }
 
  // --- Agregar bot&#243;n de cierre inferior din&#225;micamente ---
@@ -2102,6 +2092,9 @@ function filterCards() {
    setTimeout(ensureBottomCloseButtons, 500);
  }
 
+ // Ejecutar ESC inmediatamente (antes de que el DOM esté listo)
+ setupEscapeKey();
+
  // Ejecutar cuando el DOM esté listo
  if (document.readyState === 'loading') {
    document.addEventListener('DOMContentLoaded', initModalHandlers);
@@ -2112,6 +2105,7 @@ function filterCards() {
 
  // También ejecutar cuando la ventana esté completamente cargada
  window.addEventListener('load', function() {
+   setupEscapeKey(); // Asegurar que el listener esté activo
    ensureBottomCloseButtons();
  });
 
