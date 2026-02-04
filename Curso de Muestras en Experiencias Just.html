@@ -1694,7 +1694,7 @@
     .toString()
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[&#768;-&#879;]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .trim();
 }
 
@@ -1955,8 +1955,10 @@ function filterCards() {
 </div>
 
 <script>
- // Inicializar iconos Lucide
- lucide.createIcons();
+// Inicializar iconos Lucide (solo si está disponible)
+if (typeof lucide !== 'undefined' && lucide.createIcons) {
+  lucide.createIcons();
+}
 
  function toggleCard(card) {
  // Evitar girar si se hace clic en botones
@@ -2321,7 +2323,7 @@ function filterCards() {
     .toString()
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[&#768;-&#879;]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .trim();
 }
 
