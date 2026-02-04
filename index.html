@@ -1996,8 +1996,6 @@ if (typeof lucide !== 'undefined' && lucide.createIcons) {
  modal.style.display = 'flex';
  // Asegurar que los botones de cierre tengan eventos después de abrir
  setTimeout(ensureBottomCloseButtons, 50);
- // Debug: verificar que el modal se abrió
- console.log('Modal abierto:', modalId, 'display:', modal.style.display);
  }
  }
 
@@ -2055,11 +2053,7 @@ if (typeof lucide !== 'undefined' && lucide.createIcons) {
      var styleDisplay = modal.style.display;
      var computedDisplay = window.getComputedStyle(modal).display;
      
-     // Debug: verificar qué está pasando
-     console.log('Modal check:', i, 'style:', styleDisplay, 'computed:', computedDisplay);
-     
      if (styleDisplay === 'flex' || computedDisplay === 'flex') {
-       console.log('Cerrando modal con ESC');
        modal.style.display = 'none';
        enableBodyScroll();
        modalFound = true;
@@ -2164,18 +2158,14 @@ if (typeof lucide !== 'undefined' && lucide.createIcons) {
      }
      
      if (isEscape) {
-       console.log('Direct ESC handler activado, key:', key);
        var modals = document.querySelectorAll('.modal-overlay');
-       console.log('Modales encontrados:', modals.length);
        
        for (var j = 0; j < modals.length; j++) {
          var m = modals[j];
          var styleDisp = m.style.display;
          var computedDisp = window.getComputedStyle(m).display;
-         console.log('Modal', j, 'style:', styleDisp, 'computed:', computedDisp);
          
          if (computedDisp === 'flex' || styleDisp === 'flex') {
-           console.log('Cerrando modal desde direct handler');
            m.style.display = 'none';
            enableBodyScroll();
            e.preventDefault();
@@ -2203,21 +2193,16 @@ if (typeof lucide !== 'undefined' && lucide.createIcons) {
      });
    }
    
-   // Debug: verificar que los listeners se agregaron
-   console.log('Listeners de ESC configurados');
  })();
 
  // Función global simple para cerrar cualquier modal abierto
  window.closeAnyOpenModal = function() {
-   console.log('closeAnyOpenModal llamado');
    var modals = document.querySelectorAll('.modal-overlay');
    for (var k = 0; k < modals.length; k++) {
      var modal = modals[k];
      var style = modal.style.display;
      var computed = window.getComputedStyle(modal).display;
-     console.log('Verificando modal', k, 'style:', style, 'computed:', computed);
      if (style === 'flex' || computed === 'flex') {
-       console.log('Cerrando modal desde closeAnyOpenModal');
        modal.style.display = 'none';
        enableBodyScroll();
        return true;
@@ -2228,9 +2213,7 @@ if (typeof lucide !== 'undefined' && lucide.createIcons) {
 
  // Agregar listener global simple que siempre funcione
  document.addEventListener('keydown', function(e) {
-   console.log('Keydown capturado:', e.key, e.keyCode, e.which);
    if (e.key === 'Escape' || e.keyCode === 27 || e.which === 27) {
-     console.log('ESC detectado, intentando cerrar modal');
      if (window.closeAnyOpenModal()) {
        e.preventDefault();
        e.stopPropagation();
