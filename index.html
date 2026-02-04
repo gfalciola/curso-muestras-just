@@ -1994,6 +1994,8 @@ function filterCards() {
  modal.style.display = 'flex';
  // Asegurar que los botones de cierre tengan eventos después de abrir
  setTimeout(ensureBottomCloseButtons, 50);
+ // Debug: verificar que el modal se abrió
+ console.log('Modal abierto:', modalId, 'display:', modal.style.display);
  }
  }
 
@@ -2021,6 +2023,8 @@ function filterCards() {
  function handleEscapeKey(event) {
    // Verificar que sea la tecla ESC (compatibilidad con diferentes navegadores)
    var isEscape = false;
+   var keyValue = event.key || event.keyCode || event.which;
+   
    if (event.key) {
      isEscape = (event.key === 'Escape' || event.key === 'Esc');
    } else if (event.keyCode) {
@@ -2049,7 +2053,11 @@ function filterCards() {
      var styleDisplay = modal.style.display;
      var computedDisplay = window.getComputedStyle(modal).display;
      
+     // Debug: verificar qué está pasando
+     console.log('Modal check:', i, 'style:', styleDisplay, 'computed:', computedDisplay);
+     
      if (styleDisplay === 'flex' || computedDisplay === 'flex') {
+       console.log('Cerrando modal con ESC');
        modal.style.display = 'none';
        enableBodyScroll();
        modalFound = true;
@@ -2061,6 +2069,7 @@ function filterCards() {
      event.preventDefault();
      event.stopPropagation();
      event.stopImmediatePropagation();
+     return false;
    }
  }
 
@@ -2144,11 +2153,27 @@ function filterCards() {
  (function() {
    function directEscapeHandler(e) {
      var key = e.key || e.keyCode || e.which;
-     if (key === 'Escape' || key === 'Esc' || key === 27) {
+     var isEscape = false;
+     
+     if (e.key === 'Escape' || e.key === 'Esc') {
+       isEscape = true;
+     } else if (e.keyCode === 27 || e.which === 27) {
+       isEscape = true;
+     }
+     
+     if (isEscape) {
+       console.log('Direct ESC handler activado, key:', key);
        var modals = document.querySelectorAll('.modal-overlay');
+       console.log('Modales encontrados:', modals.length);
+       
        for (var j = 0; j < modals.length; j++) {
          var m = modals[j];
-         if (window.getComputedStyle(m).display === 'flex' || m.style.display === 'flex') {
+         var styleDisp = m.style.display;
+         var computedDisp = window.getComputedStyle(m).display;
+         console.log('Modal', j, 'style:', styleDisp, 'computed:', computedDisp);
+         
+         if (computedDisp === 'flex' || styleDisp === 'flex') {
+           console.log('Cerrando modal desde direct handler');
            m.style.display = 'none';
            enableBodyScroll();
            e.preventDefault();
@@ -2158,17 +2183,58 @@ function filterCards() {
        }
      }
    }
+   
    // Agregar múltiples veces para asegurar
    document.onkeydown = directEscapeHandler;
    window.onkeydown = directEscapeHandler;
+   
+   // También con addEventListener
+   document.addEventListener('keydown', directEscapeHandler, true);
+   window.addEventListener('keydown', directEscapeHandler, true);
+   
    if (document.body) {
      document.body.onkeydown = directEscapeHandler;
    } else {
      document.addEventListener('DOMContentLoaded', function() {
        document.body.onkeydown = directEscapeHandler;
+       document.body.addEventListener('keydown', directEscapeHandler, true);
      });
    }
+   
+   // Debug: verificar que los listeners se agregaron
+   console.log('Listeners de ESC configurados');
  })();
+
+ // Función global simple para cerrar cualquier modal abierto
+ window.closeAnyOpenModal = function() {
+   console.log('closeAnyOpenModal llamado');
+   var modals = document.querySelectorAll('.modal-overlay');
+   for (var k = 0; k < modals.length; k++) {
+     var modal = modals[k];
+     var style = modal.style.display;
+     var computed = window.getComputedStyle(modal).display;
+     console.log('Verificando modal', k, 'style:', style, 'computed:', computed);
+     if (style === 'flex' || computed === 'flex') {
+       console.log('Cerrando modal desde closeAnyOpenModal');
+       modal.style.display = 'none';
+       enableBodyScroll();
+       return true;
+     }
+   }
+   return false;
+ };
+
+ // Agregar listener global simple que siempre funcione
+ document.addEventListener('keydown', function(e) {
+   console.log('Keydown capturado:', e.key, e.keyCode, e.which);
+   if (e.key === 'Escape' || e.keyCode === 27 || e.which === 27) {
+     console.log('ESC detectado, intentando cerrar modal');
+     if (window.closeAnyOpenModal()) {
+       e.preventDefault();
+       e.stopPropagation();
+     }
+   }
+ }, true);
 
  // --- Navegación suave y resaltado activo del índice en el header ---
  (function() {
